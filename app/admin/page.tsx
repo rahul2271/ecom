@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { Withdrawal, Affiliate } from "@prisma/client";
 import { ShieldCheck, Users, ShoppingCart, IndianRupee } from 'lucide-react';
 
 export default async function AdminDashboard() {
@@ -51,24 +52,29 @@ export default async function AdminDashboard() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {pendingWithdrawals.map((req) => (
-              <tr key={req.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <p className="font-bold text-gray-900">{req.affiliate.name}</p>
-                  <p className="text-xs text-gray-400">{req.affiliate.email}</p>
-                </td>
-                <td className="px-6 py-4 font-black text-gray-900">₹{req.amount}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {new Date(req.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
-                    Approve Payout
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {pendingWithdrawals.map((req: Withdrawal & { affiliate: Affiliate }) => (
+    <tr key={req.id} className="hover:bg-gray-50 transition">
+      <td className="px-6 py-4">
+        <p className="font-bold text-gray-900">{req.affiliate.name}</p>
+        <p className="text-xs text-gray-400">{req.affiliate.email}</p>
+      </td>
+
+      <td className="px-6 py-4 font-black text-gray-900">
+        ₹{req.amount}
+      </td>
+
+      <td className="px-6 py-4 text-sm text-gray-500">
+        {new Date(req.createdAt).toLocaleDateString()}
+      </td>
+
+      <td className="px-6 py-4 text-right">
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
+          Approve Payout
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
     </div>
