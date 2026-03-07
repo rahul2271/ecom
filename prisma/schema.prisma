@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-
+  
 }
 
 generator client {
@@ -53,7 +53,8 @@ model Order {
   razorpayOrderId String   @unique
   totalAmount     Float
   status          String   @default("PAID")
-  
+  commissionPaid  Boolean  @default(false) 
+
   customerId      String
   customer        User     @relation("CustomerOrders", fields: [customerId], references: [id])
   

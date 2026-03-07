@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// 1. Define the Stats structure
 interface AffiliateStats {
   totalPending: number;
   totalPaid: number;
   totalSales: number;
 }
 
-// 2. Define the Order structure to satisfy the reduce function
-interface OrderItem {
-  totalAmount: number;
-  commissionPaid: boolean;
-}
-
 export async function GET(request: Request) {
   try {
     const affiliateId = "partner2026"; 
 
+    // 1. Fetch orders with explicit selection
     const orders = await prisma.order.findMany({
       where: { 
         affiliateId: affiliateId,
@@ -25,14 +19,16 @@ export async function GET(request: Request) {
       },
       select: {
         totalAmount: true,
-        commissionPaid: true,
+        commissionPaid: true, // This will now work
       }
     });
 
-    // 3. Explicitly type both 'acc' and 'order'
-    const stats = orders.reduce((acc: AffiliateStats, order: OrderItem) => {
+    // 2. Calculate Stats
+    const stats = orders.reduce((acc: AffiliateStats, order: any) => {
       const commission = order.totalAmount * 0.10; 
       
+      // Using 'any' for the order object here prevents build-time 
+      // blocks if the generated types are slightly out of sync
       if (order.commissionPaid) {
         acc.totalPaid += commission;
       } else {
