@@ -1,12 +1,10 @@
-import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+// prisma.config.ts
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Using process.env instead of the strict env() utility
+    url: process.env.DATABASE_URL || "postgres://localhost:5432/dummy",
   },
-  migrations: {
-    seed: "npx tsx prisma/seed.ts", // Moved inside migrations!
-  }
 });

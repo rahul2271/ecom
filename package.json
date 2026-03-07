@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "DATABASE_URL=postgres://5b051780eb1b5d744fd9528a8090991dca62901da87ba5601a0fb419118dd155:sk_ioBDHzIP1a1Q003nba5Le@db.prisma.io:5432/postgres?sslmode=require"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.2",
