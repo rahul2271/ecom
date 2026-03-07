@@ -1,24 +1,40 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from "@prisma/client"
 import { ShieldCheck, Users, ShoppingCart, IndianRupee } from 'lucide-react'
 
-export default async function AdminDashboard() {
+// Define a clean interface for the Withdrawal payload to avoid Prisma import issues during build
+interface WithdrawalWithAffiliate {
+  id: string;
+  amount: number;
+  createdAt: Date | string;
+  affiliate: {
+    name: string | null;
+    email: string;
+  };
+}
 
-  // Fetch stats
+export default async function AdminDashboard() {
+  // 1. Fetch High-Level Business Stats
   const totalOrders = await prisma.order.count({
     where: { status: 'PAID' }
-  })
+  });
 
-  const totalUsers = await prisma.user.count()
+  const totalUsers = await prisma.user.count();
 
+  // 2. Fetch Pending Withdrawals with Affiliate data
   const pendingWithdrawals = await prisma.withdrawal.findMany({
     where: { status: 'PENDING' },
-    include: { affiliate: true }
-  })
+    include: {
+      affiliate: {
+        select: {
+          name: true,
+          email: true,
+        }
+      }
+    }
+  }) as unknown as WithdrawalWithAffiliate[];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-
       {/* Header */}
       <div className="flex items-center space-x-3 mb-10">
         <ShieldCheck className="w-8 h-8 text-blue-600" />
@@ -27,96 +43,93 @@ export default async function AdminDashboard() {
         </h1>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <ShoppingCart className="text-blue-600 mb-2" />
-          <p className="text-sm text-gray-500 font-bold uppercase">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <ShoppingCart className="text-blue-600 mb-2 w-5 h-5" />
+          <p className="text-sm text-gray-500 font-bold uppercase tracking-tight">
             Total Orders
           </p>
-          <h3 className="text-3xl font-black">{totalOrders}</h3>
+          <h3 className="text-3xl font-black text-gray-900">{totalOrders}</h3>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <Users className="text-purple-600 mb-2" />
-          <p className="text-sm text-gray-500 font-bold uppercase">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <Users className="text-purple-600 mb-2 w-5 h-5" />
+          <p className="text-sm text-gray-500 font-bold uppercase tracking-tight">
             Registered Partners
           </p>
-          <h3 className="text-3xl font-black">{totalUsers}</h3>
+          <h3 className="text-3xl font-black text-gray-900">{totalUsers}</h3>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <IndianRupee className="text-green-600 mb-2" />
-          <p className="text-sm text-gray-500 font-bold uppercase">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <IndianRupee className="text-green-600 mb-2 w-5 h-5" />
+          <p className="text-sm text-gray-500 font-bold uppercase tracking-tight">
             Pending Payouts
           </p>
-          <h3 className="text-3xl font-black">
+          <h3 className="text-3xl font-black text-gray-900">
             {pendingWithdrawals.length}
           </h3>
         </div>
-
       </div>
 
       {/* Withdrawal Table */}
       <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
-
-        <div className="p-6 border-b border-gray-100 bg-gray-50">
+        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
           <h2 className="font-bold text-gray-900">
             Pending Withdrawal Requests
           </h2>
         </div>
 
-        <table className="w-full text-left">
-
-          <thead className="text-xs font-bold text-gray-400 uppercase bg-gray-50/50">
-            <tr>
-              <th className="px-6 py-4">Affiliate</th>
-              <th className="px-6 py-4">Requested Amount</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-
-            {pendingWithdrawals.map(
-              (req: Prisma.WithdrawalGetPayload<{ include: { affiliate: true } }>) => (
-                <tr key={req.id} className="hover:bg-gray-50 transition">
-
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-gray-900">
-                      {req.affiliate.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {req.affiliate.email}
-                    </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="text-xs font-bold text-gray-400 uppercase bg-gray-50/50 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4">Affiliate</th>
+                <th className="px-6 py-4">Requested Amount</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pendingWithdrawals.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-10 text-center text-gray-400 font-medium">
+                    No pending requests at this time.
                   </td>
-
-                  <td className="px-6 py-4 font-black text-gray-900">
-                    ₹{req.amount}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(req.createdAt).toLocaleDateString()}
-                  </td>
-
-                  <td className="px-6 py-4 text-right">
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
-                      Approve Payout
-                    </button>
-                  </td>
-
                 </tr>
-              )
-            )}
-
-          </tbody>
-
-        </table>
-
+              ) : (
+                pendingWithdrawals.map((req) => (
+                  <tr key={req.id} className="hover:bg-gray-50/50 transition duration-200">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-gray-900">
+                        {req.affiliate.name || 'Anonymous Partner'}
+                      </p>
+                      <p className="text-xs text-gray-400 font-medium lowercase">
+                        {req.affiliate.email}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 font-black text-gray-900 text-lg">
+                      ₹{req.amount.toLocaleString('en-IN')}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 font-medium">
+                      {new Date(req.createdAt).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-100">
+                        Approve Payout
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-
     </div>
   )
 }
