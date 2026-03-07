@@ -1,29 +1,31 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// 1. Define the shape of our stats object for TypeScript
+interface AffiliateStats {
+  totalPending: number;
+  totalPaid: number;
+  totalSales: number;
+}
+
 export async function GET(request: Request) {
   try {
-    // In a real app, you'd get the current user's ID from a session/token
-    // For now, let's use a dummy ID for testing
-    const affiliateId = "clp_123456789"; 
+    // For testing/initial setup: Use the ID of the affiliate you seeded
+    // In production, this would come from your Auth session (e.g., NextAuth)
+    const affiliateId = "partner2026"; 
 
-    // 1. Fetch all orders referred by this affiliate
+    // 2. Fetch all successful orders linked to this affiliate
     const orders = await prisma.order.findMany({
       where: { 
         affiliateId: affiliateId,
         status: 'PAID' 
-      },
-      include: {
-        // We don't need the full product data, just the total amount
       }
     });
 
-    // 2. Calculate Stats
-    // Since we store commission as a percentage on the Product, 
-    // in a production app you'd join with the Product table.
-    // For this example, we'll use a standard 10% calculation logic.
-    const stats = orders.reduce((acc, order) => {
-      const commission = order.totalAmount * 0.10; // 10% commission logic
+    // 3. Calculate Stats with explicit typing for the accumulator
+    const stats = orders.reduce((acc: AffiliateStats, order) => {
+      // Standard 10% commission logic for RC Tech Solutions gadgets
+      const commission = order.totalAmount * 0.10; 
       
       if (order.commissionPaid) {
         acc.totalPaid += commission;
@@ -37,6 +39,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(stats);
   } catch (error) {
+    console.error("Stats Error:", error);
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }
