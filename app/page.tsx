@@ -1,4 +1,6 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingBag, ArrowRight, Zap } from 'lucide-react';
