@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/lib/prisma';
 import { ShieldCheck, Users, ShoppingCart, IndianRupee } from 'lucide-react';
 import ApproveButton from '@/components/ApproveButton';
